@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import { Line } from 'react-chartjs-2';
 import * as zoom from 'chartjs-plugin-zoom'
+import { Header } from './Header'
 
 const data = {
   datasets: [{
@@ -95,6 +96,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
+      <Header/>
         {this.state.isLoaded && 
         <Line ref="chart" data={data} options={options} />
         }
