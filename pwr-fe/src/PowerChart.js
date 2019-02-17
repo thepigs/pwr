@@ -1,67 +1,20 @@
-const data = {
-    datasets: [{
-      label: 'Dataset with string point data',
-      backgroundColor: 'rgba(200,200,200,0.2)',
-      borderColor: 'rgba(20,20,20,1)',
-      fill: false,
-    }]
-  }
-  
-  const options = {
-    responsive: true,
-    title: {
-      display: true,
-      text: 'Chart.js Time Point Data'
-    },
-    pan: {
-      enabled: true,
-      mode: 'x'
-    },
-    zoom: {
-      enabled: true,
-      mode: 'x',
-      drag: true
-    },
-    scales: {
-      xAxes: [{
-        type: 'time',
-        display: true,
-        scaleLabel: {
-          display: true,
-          labelString: 'Date'
-        },
-        ticks: {
-          major: {
-            fontStyle: 'bold',
-            fontColor: '#FF0000'
-          }
-        }
-      }],
-      yAxes: [{
-        display: true,
-        ticks: {
-        beginAtZero: true,
-        },
-        scaleLabel: {
-          display: true,
-          labelString: 'value'
-        }
-      }]
-    }
-  }
-  
-  
-  class App extends Component {
+import React, { Component } from 'react';
+import { TimeSeries } from 'pondjs'
+import {Charts,ChartContainer,ChartRow,YAxis,LineChart} from 'react-timeseries-charts'
+
+  export default class PowerChart extends Component {
     constructor(props) {
       super(props);
       this.state = {
         error: null,
         isLoaded: false,
-        data: []
+        series: {}
       };
     }
-  
-    resetZoom(){
+    handleTimeRangeChange = timerange => {
+      this.setState({ timerange });
+  }
+      resetZoom(){
       console.log(this.refs.chart.chartInstance.resetZoom())
     }
     componentDidMount() {
@@ -69,10 +22,14 @@ const data = {
         .then(res => res.json())
         .then(
           (result) => {
-            data.datasets[0].data=result.map(d => { return { x: new Date(d.date), y: d.sum } })
+            const points = result.map(d => [new Date(d.date).getTime(), d.sum ] ).reverse()
+            const series = new TimeSeries({name:'power',columns:['time','value'],points})
+            console.log(series.min()+' '+series.max())
+
             this.setState({
-              isLoaded: true,
-              items: data
+              series,
+              isLoaded:true,
+              timerange:series.range()
             });
           },
           // Note: it's important to handle errors here
@@ -80,22 +37,31 @@ const data = {
           // exceptions from actual bugs in components.
           (error) => {
             this.setState({
-              isLoaded: true,
               error
             });
           }
         )
     }
+    
     render() {
       return (
-        <div className="App">
-        <Header/>
-          {this.state.isLoaded && 
-          <Line ref="chart" data={data} options={options} />
-          }
-          <button onClick={()=>this.resetZoom()}>Reset Zoom</button>
-        </div>
-      );
+this.state.isLoaded && (
+<ChartContainer timeRange={this.state.timerange} onTimeRangeChanged={this.handleTimeRangeChange} enablePanZoom={true}>
+
+
+        <ChartRow height="150">
+            <YAxis
+                id="pulses"
+                label="Pulses"
+                min={0} max={this.state.series.max()}
+                format=",.1d"
+                width="60" />
+            <Charts>
+                <LineChart axis="pulses" series={this.state.series} />
+            </Charts>
+        </ChartRow>
+    </ChartContainer> )
+);
     }
   }
   
