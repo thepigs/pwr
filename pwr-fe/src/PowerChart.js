@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { TimeSeries } from 'pondjs'
-import {Charts,ChartContainer,ChartRow,YAxis,LineChart} from 'react-timeseries-charts'
+import {Brush,Charts,ChartContainer,ChartRow,YAxis,LineChart, Resizable} from 'react-timeseries-charts'
+import Button from 'react-bootstrap/Button'
+import { isNullOrUndefined } from 'util';
 
   export default class PowerChart extends Component {
     constructor(props) {
@@ -8,15 +10,24 @@ import {Charts,ChartContainer,ChartRow,YAxis,LineChart} from 'react-timeseries-c
       this.state = {
         error: null,
         isLoaded: false,
-        series: {}
+        series: null,
+        timerange: null,
+        brushrange: null
       };
     }
     handleTimeRangeChange = timerange => {
       this.setState({ timerange });
   }
-      resetZoom(){
-      console.log(this.refs.chart.chartInstance.resetZoom())
-    }
+  handleBrushRangeChange = timerange => {
+    console.log(timerange);
+    this.setState({ brushrange:timerange });
+}
+
+  resetZoom = () => {
+    this.setState({
+      timerange:this.state.series.range()
+    });
+}
     componentDidMount() {
       fetch("http://localhost:8081/power")
         .then(res => res.json())
@@ -36,6 +47,7 @@ import {Charts,ChartContainer,ChartRow,YAxis,LineChart} from 'react-timeseries-c
           // instead of a catch() block so that we don't swallow
           // exceptions from actual bugs in components.
           (error) => {
+            console.log(error);
             this.setState({
               error
             });
@@ -46,10 +58,17 @@ import {Charts,ChartContainer,ChartRow,YAxis,LineChart} from 'react-timeseries-c
     render() {
       return (
 this.state.isLoaded && (
+  <>
+  <Resizable>
 <ChartContainer timeRange={this.state.timerange} onTimeRangeChanged={this.handleTimeRangeChange} enablePanZoom={true}>
 
 
-        <ChartRow height="150">
+        <ChartRow height="200">
+        {/* <Brush
+                        timeRange={this.state.brushrange}
+                        allowSelectionClear
+                        onTimeRangeChanged={this.handleBrushRangeChange}
+                    /> */}
             <YAxis
                 id="pulses"
                 label="Pulses"
@@ -60,7 +79,9 @@ this.state.isLoaded && (
                 <LineChart axis="pulses" series={this.state.series} />
             </Charts>
         </ChartRow>
-    </ChartContainer> )
+    </ChartContainer>
+    </Resizable>
+    <Button onClick={this.resetZoom}>Reset Zoom</Button></> )
 );
     }
   }
