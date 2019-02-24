@@ -5,13 +5,9 @@ const PulseSchema = new mongoose.Schema({ date: Date , pulses: Number })
 const Pulse = mongoose.model('pulse', PulseSchema);
 const GRAN = 2*60*1000
 
-agg = () => Pulse.aggregate([
+agg = (s,e) => Pulse.aggregate([
     {
-      '$match': {
-        'date': {
-          '$gt': new Date('04 Feb 2019 00:00:00 GMT')
-        }
-      }
+      '$match': { $and:[{date: {$gte:s}},{date: {$lte:e}}] }
     }, {
       '$group': {
         '_id': {
